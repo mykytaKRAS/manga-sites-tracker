@@ -5,11 +5,20 @@ using MangaTracker.Infrastructure.Persistence;
 using MangaTracker.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
+using MangaTracker.Core.Interfaces;
+using MangaTracker.Infrastructure.Providers.MangaLib;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<MangaTrackerDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+
+builder.Services.AddHttpClient<IMangaSourceProvider, MangaLibProvider>(client =>
+{
+    client.BaseAddress = new Uri("https://api.cdnlibs.org/");
+    client.Timeout = TimeSpan.FromSeconds(15);
+    client.DefaultRequestHeaders.Add("User-Agent", "MangaTracker/1.0 (personal project)");
+});
 
 builder.Services.AddScoped<IMangaRepository, MangaRepository>();
 builder.Services.AddScoped<MangaService>();

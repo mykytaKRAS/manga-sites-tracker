@@ -1,6 +1,7 @@
 ﻿using MangaTracker.Api.Contracts;
 using MangaTracker.Core.Entities;
 using MangaTracker.Core.Exceptions;
+using MangaTracker.Core.Interfaces;
 using MangaTracker.Core.Services;
 
 namespace MangaTracker.Api.Endpoints;
@@ -74,6 +75,30 @@ public static class MangaEndpoints
         {
             var deleted = await service.DeleteAsync(id, ct);
             return deleted ? Results.NoContent() : Results.NotFound();
+        });
+
+        group.MapGet("/{id:int}/check", async (
+            int id,
+            MangaService service,
+            IMangaSourceProvider provider,
+            CancellationToken ct) =>
+        {
+            var manga = await service.GetByIdAsync(id, ct);
+            if (manga is null)
+            {
+                return Results.NotFound();
+            }
+
+            if (manga.Source != provider.Source)
+            {
+                return Results.BadRequest(new { message = $"No provider for source {manga.Source} yet." });
+            }
+
+            var latest = await provider.GetLatestChapterAsync(manga.SourceUrl, ct);
+
+            return latest is null
+                ? Results.Problem("Could not determine the latest chapter.", statusCode: 502)
+                : Results.Ok(new { chapter = latest.Number, url = latest.Url });
         });
     }
 
