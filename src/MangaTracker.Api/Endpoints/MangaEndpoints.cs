@@ -78,10 +78,10 @@ public static class MangaEndpoints
         });
 
         group.MapGet("/{id:int}/check", async (
-            int id,
-            MangaService service,
-            IMangaSourceProvider provider,
-            CancellationToken ct) =>
+             int id,
+             MangaService service,
+             IEnumerable<IMangaSourceProvider> providers,
+             CancellationToken ct) =>
         {
             var manga = await service.GetByIdAsync(id, ct);
             if (manga is null)
@@ -89,9 +89,10 @@ public static class MangaEndpoints
                 return Results.NotFound();
             }
 
-            if (manga.Source != provider.Source)
+            var provider = providers.FirstOrDefault(p => p.Source == manga.Source);
+            if (provider is null)
             {
-                return Results.BadRequest(new { message = $"No provider for source {manga.Source} yet." });
+                return Results.BadRequest(new { message = $"No provider for source {manga.Source}." });
             }
 
             var latest = await provider.GetLatestChapterAsync(manga.SourceUrl, ct);
