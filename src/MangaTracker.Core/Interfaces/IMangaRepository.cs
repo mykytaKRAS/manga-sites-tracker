@@ -15,4 +15,6 @@ public interface IMangaRepository
     void Remove(Manga manga);
 
     Task SaveChangesAsync(CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Manga>> GetAllForUpdateAsync(CancellationToken cancellationToken = default);
 }

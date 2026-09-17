@@ -3,11 +3,11 @@ using MangaTracker.Core.Interfaces;
 using MangaTracker.Core.Services;
 using MangaTracker.Infrastructure.Persistence;
 using MangaTracker.Infrastructure.Persistence.Repositories;
-using Microsoft.EntityFrameworkCore;
-using System.Text.Json.Serialization;
+using MangaTracker.Infrastructure.Providers;
 using MangaTracker.Infrastructure.Providers.Html;
 using MangaTracker.Infrastructure.Providers.MangaLib;
-using MangaTracker.Core.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,6 +35,9 @@ builder.Services.AddScoped<IMangaSourceProvider>(sp => sp.GetRequiredService<Man
 builder.Services.AddScoped<IMangaSourceProvider>(sp => sp.GetRequiredService<MangaBluePeriodProvider>());
 builder.Services.AddScoped<IMangaSourceProvider>(sp => sp.GetRequiredService<MangaRecordOfRagnarokProvider>());
 builder.Services.AddScoped<IMangaSourceProvider>(sp => sp.GetRequiredService<MangaHunterProvider>());
+
+builder.Services.AddScoped<IMangaSourceProviderFactory, MangaSourceProviderFactory>();
+builder.Services.AddScoped<MangaUpdateChecker>();
 
 static void ConfigureHtmlClient(HttpClient client)
 {
