@@ -48,4 +48,11 @@ public class MangaRepository : IMangaRepository
     {
         await _context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<Manga>> GetAllForUpdateAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Mangas
+            .OrderBy(m => m.Id)
+            .ToListAsync(cancellationToken);
+    }
 }

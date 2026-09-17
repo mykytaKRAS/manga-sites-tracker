@@ -77,29 +77,28 @@ public static class MangaEndpoints
             return deleted ? Results.NoContent() : Results.NotFound();
         });
 
-        group.MapGet("/{id:int}/check", async (
-             int id,
-             MangaService service,
-             IEnumerable<IMangaSourceProvider> providers,
-             CancellationToken ct) =>
+        group.MapPost("/{id:int}/check", async (
+            int id,
+            MangaUpdateChecker checker,
+            CancellationToken ct) =>
         {
-            var manga = await service.GetByIdAsync(id, ct);
-            if (manga is null)
+            var result = await checker.CheckOneAsync(id, ct);
+            return result is null ? Results.NotFound() : Results.Ok(result);
+        });
+
+        group.MapPost("/check-all", async (
+            MangaUpdateChecker checker,
+            CancellationToken ct) =>
+        {
+            var results = await checker.CheckAllAsync(ct);
+            return Results.Ok(new
             {
-                return Results.NotFound();
-            }
-
-            var provider = providers.FirstOrDefault(p => p.Source == manga.Source);
-            if (provider is null)
-            {
-                return Results.BadRequest(new { message = $"No provider for source {manga.Source}." });
-            }
-
-            var latest = await provider.GetLatestChapterAsync(manga.SourceUrl, ct);
-
-            return latest is null
-                ? Results.Problem("Could not determine the latest chapter.", statusCode: 502)
-                : Results.Ok(new { chapter = latest.Number, url = latest.Url });
+                checkedAt = DateTime.UtcNow,
+                total = results.Count,
+                newChapters = results.Count(r => r.Status == CheckStatus.NewChapterFound),
+                failed = results.Count(r => r.Status == CheckStatus.Failed),
+                results
+            });
         });
     }
 
