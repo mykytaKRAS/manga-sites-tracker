@@ -18,9 +18,10 @@ public partial class MangaLibProvider : IMangaSourceProvider
         _logger = logger;
     }
 
-    public MangaSource Source => MangaSource.MangaLib;
+    public SourceKind Kind => SourceKind.MangaLibApi;
 
     public async Task<ChapterInfo?> GetLatestChapterAsync(
+        MangaSource source,
         string sourceUrl,
         CancellationToken cancellationToken = default)
     {
@@ -33,8 +34,20 @@ public partial class MangaLibProvider : IMangaSourceProvider
 
         try
         {
-            var response = await _httpClient.GetFromJsonAsync<MangaLibChaptersResponse>(
+            using var httpResponse = await _httpClient.GetAsync(
                 $"api/manga/{slug}/chapters",
+                cancellationToken);
+
+            if (!httpResponse.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "MangaLib API returned {StatusCode} for slug {Slug}",
+                    (int)httpResponse.StatusCode,
+                    slug);
+                return null;
+            }
+
+            var response = await httpResponse.Content.ReadFromJsonAsync<MangaLibChaptersResponse>(
                 cancellationToken);
 
             var chapters = response?.Data;
@@ -57,7 +70,7 @@ public partial class MangaLibProvider : IMangaSourceProvider
                 return null;
             }
 
-            var chapterUrl = BuildChapterUrl(sourceUrl, latest.Raw);
+            var chapterUrl = BuildChapterUrl(sourceUrl, slug, latest.Raw);
 
             return new ChapterInfo(latest.Number!.Value, chapterUrl);
         }
@@ -96,10 +109,10 @@ public partial class MangaLibProvider : IMangaSourceProvider
             : null;
     }
 
-    private static string BuildChapterUrl(string sourceUrl, MangaLibChapter chapter)
+    private static string BuildChapterUrl(string sourceUrl, string slug, MangaLibChapter chapter)
     {
-        var baseUrl = sourceUrl.TrimEnd('/');
-        return $"{baseUrl}/read/v{chapter.Volume}/c{chapter.Number}";
+        var origin = new Uri(sourceUrl).GetLeftPart(UriPartial.Authority);
+        return $"{origin}/ru/{slug}/read/v{chapter.Volume}/c{chapter.Number}";
     }
 
     [GeneratedRegex(@"/(?<slug>\d+--[a-z0-9\-]+)", RegexOptions.IgnoreCase)]

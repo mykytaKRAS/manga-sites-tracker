@@ -1,5 +1,4 @@
 ﻿namespace MangaTracker.Core.Exceptions;
-
 public class DuplicateMangaException : Exception
 {
     public DuplicateMangaException(string sourceUrl)
@@ -9,4 +8,11 @@ public class DuplicateMangaException : Exception
     }
 
     public string SourceUrl { get; }
+}
+
+public class InvalidMangaException : Exception
+{
+    public InvalidMangaException(string message) : base(message)
+    {
+    }
 }

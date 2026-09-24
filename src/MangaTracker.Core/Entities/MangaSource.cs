@@ -6,12 +6,17 @@ using System.Threading.Tasks;
 
 namespace MangaTracker.Core.Entities
 {
-    public enum MangaSource
+    public class MangaSource
     {
-        MangaLib = 1,
-        MangaShi = 2,
-        BluePeriodChapters = 3,
-        RagnarokManga = 4,
-        ReadHxh = 5
+        public int Id { get; set; }
+        public string Name { get; set; } = null!;
+        public SourceKind Kind { get; set; }
+        public string? ChapterLinkSelector { get; set; }
+        public string? ChapterNumberPattern { get; set; }
+        public ChapterNumberSource NumberSource { get; set; } = ChapterNumberSource.LinkTextThenHref;
+        public bool IsEnabled { get; set; } = true;
+        public string? DisabledReason { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public ICollection<Manga> Mangas { get; set; } = new List<Manga>();
     }
 }

@@ -4,7 +4,10 @@ namespace MangaTracker.Core.Interfaces;
 
 public interface IMangaSourceProvider
 {
-    MangaSource Source { get; }
+    SourceKind Kind { get; }
 
-    Task<ChapterInfo?> GetLatestChapterAsync(string sourceUrl, CancellationToken cancellationToken = default);
+    Task<ChapterInfo?> GetLatestChapterAsync(
+        MangaSource source,
+        string sourceUrl,
+        CancellationToken cancellationToken = default);
 }

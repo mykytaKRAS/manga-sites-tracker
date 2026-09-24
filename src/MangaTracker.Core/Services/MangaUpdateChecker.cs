@@ -54,14 +54,14 @@ public class MangaUpdateChecker
 
     private async Task<CheckResult> CheckAsync(Manga manga, CancellationToken ct)
     {
-        var provider = _providerFactory.GetProvider(manga.Source);
+        var provider = _providerFactory.GetProvider(manga.Source.Kind);
         if (provider is null)
         {
-            _logger.LogWarning("No provider registered for source {Source}", manga.Source);
+            _logger.LogWarning("No provider for kind {Kind}", manga.Source.Kind);
             return new CheckResult(manga.Id, manga.Title, CheckStatus.NoProvider, null, null);
         }
 
-        var latest = await provider.GetLatestChapterAsync(manga.SourceUrl, ct);
+        var latest = await provider.GetLatestChapterAsync(manga.Source, manga.SourceUrl, ct);
 
         manga.LastCheckedAt = DateTime.UtcNow;
 

@@ -9,7 +9,6 @@ using MangaTracker.Infrastructure.Providers.MangaLib;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<MangaTrackerDbContext>(options =>
@@ -20,24 +19,25 @@ builder.Services.AddHttpClient<MangaLibProvider>(client =>
     client.BaseAddress = new Uri("https://api.cdnlibs.org/");
     client.Timeout = TimeSpan.FromSeconds(15);
     client.DefaultRequestHeaders.Add("User-Agent", "MangaTracker/1.0 (personal project)");
+    client.DefaultRequestHeaders.Referrer = new Uri("https://mangalib.org/");
 });
 
-builder.Services.AddHttpClient<MangaShiProvider>(ConfigureHtmlClient);
-builder.Services.AddHttpClient<MangaBluePeriodProvider>(ConfigureHtmlClient);
-builder.Services.AddHttpClient<MangaRecordOfRagnarokProvider>(ConfigureHtmlClient);
-builder.Services.AddHttpClient<MangaHunterProvider>(ConfigureHtmlClient);
+builder.Services.AddHttpClient<HtmlMangaProvider>(ConfigureHtmlClient);
+builder.Services.AddHttpClient("html-source", ConfigureHtmlClient);
 
-builder.Services.AddScoped<IMangaRepository, MangaRepository>();
-builder.Services.AddScoped<MangaService>();
+builder.Services.AddSingleton<IHtmlChapterParser, HtmlChapterParser>();
 
 builder.Services.AddScoped<IMangaSourceProvider>(sp => sp.GetRequiredService<MangaLibProvider>());
-builder.Services.AddScoped<IMangaSourceProvider>(sp => sp.GetRequiredService<MangaShiProvider>());
-builder.Services.AddScoped<IMangaSourceProvider>(sp => sp.GetRequiredService<MangaBluePeriodProvider>());
-builder.Services.AddScoped<IMangaSourceProvider>(sp => sp.GetRequiredService<MangaRecordOfRagnarokProvider>());
-builder.Services.AddScoped<IMangaSourceProvider>(sp => sp.GetRequiredService<MangaHunterProvider>());
+builder.Services.AddScoped<IMangaSourceProvider>(sp => sp.GetRequiredService<HtmlMangaProvider>());
 
 builder.Services.AddScoped<IMangaSourceProviderFactory, MangaSourceProviderFactory>();
+
+builder.Services.AddScoped<IMangaRepository, MangaRepository>();
+builder.Services.AddScoped<ISourceRepository, SourceRepository>();
+
+builder.Services.AddScoped<MangaService>();
 builder.Services.AddScoped<MangaUpdateChecker>();
+builder.Services.AddScoped<SourceService>();
 
 static void ConfigureHtmlClient(HttpClient client)
 {
@@ -65,5 +65,6 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.MapMangaEndpoints();
+app.MapSourceEndpoints();
 
 app.Run();

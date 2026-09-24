@@ -13,6 +13,7 @@ public class MangaTrackerDbContext : DbContext
     }
 
     public DbSet<Manga> Mangas => Set<Manga>();
+    public DbSet<MangaSource> Sources => Set<MangaSource>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -16,6 +16,7 @@ public class MangaRepository : IMangaRepository
     public async Task<IReadOnlyList<Manga>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await _context.Mangas
+            .Include(m => m.Source)
             .AsNoTracking()
             .OrderByDescending(m => m.HasUnreadChapter)
             .ThenBy(m => m.Title)
@@ -25,6 +26,7 @@ public class MangaRepository : IMangaRepository
     public async Task<Manga?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
     {
         return await _context.Mangas
+            .Include(m => m.Source)
             .FirstOrDefaultAsync(m => m.Id == id, cancellationToken);
     }
 
@@ -52,6 +54,8 @@ public class MangaRepository : IMangaRepository
     public async Task<IReadOnlyList<Manga>> GetAllForUpdateAsync(CancellationToken cancellationToken = default)
     {
         return await _context.Mangas
+            .Include(m => m.Source)
+            .Where(m => m.Source.IsEnabled)
             .OrderBy(m => m.Id)
             .ToListAsync(cancellationToken);
     }
