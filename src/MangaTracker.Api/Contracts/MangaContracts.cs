@@ -4,7 +4,7 @@ namespace MangaTracker.Api.Contracts;
 
 public record CreateMangaRequest(
     string Title,
-    MangaSource Source,
+    int SourceId,
     string SourceUrl);
 
 public record MangaResponse(

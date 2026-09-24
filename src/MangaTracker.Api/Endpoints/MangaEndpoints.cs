@@ -46,17 +46,17 @@ public static class MangaEndpoints
                 });
             }
 
-            if (!Enum.IsDefined(request.Source))
+            /*if (!Enum.IsDefined(request.Source))
             {
                 return Results.ValidationProblem(new Dictionary<string, string[]>
                 {
                     ["source"] = ["Unknown manga source."]
                 });
-            }
+            }*/
 
             try
             {
-                var manga = await service.AddAsync(request.Title, request.Source, request.SourceUrl, ct);
+                var manga = await service.AddAsync(request.Title, request.SourceId, request.SourceUrl, ct);
                 return Results.Created($"/api/manga/{manga.Id}", ToResponse(manga));
             }
             catch (DuplicateMangaException ex)
@@ -105,7 +105,7 @@ public static class MangaEndpoints
     private static MangaResponse ToResponse(Manga manga) => new(
         manga.Id,
         manga.Title,
-        manga.Source.ToString(),
+        manga.Source.Name,
         manga.SourceUrl,
         manga.LastKnownChapter,
         manga.LastChapterUrl,

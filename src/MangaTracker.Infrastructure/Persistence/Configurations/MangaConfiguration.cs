@@ -23,11 +23,6 @@ public class MangaConfiguration : IEntityTypeConfiguration<Manga>
         builder.Property(m => m.LastChapterUrl)
             .HasMaxLength(500);
 
-        builder.Property(m => m.Source)
-            .HasConversion<string>()
-            .HasMaxLength(50)
-            .IsRequired();
-
         builder.Property(m => m.LastKnownChapter)
             .HasPrecision(8, 2);
 

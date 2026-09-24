@@ -7,10 +7,12 @@ namespace MangaTracker.Core.Services;
 public class MangaService
 {
     private readonly IMangaRepository _repository;
+    private readonly ISourceRepository _sourceRepository;
 
-    public MangaService(IMangaRepository repository)
+    public MangaService(IMangaRepository repository, ISourceRepository sourceRepository)
     {
         _repository = repository;
+        _sourceRepository = sourceRepository;
     }
 
     public Task<IReadOnlyList<Manga>> GetAllAsync(CancellationToken ct = default)
@@ -19,29 +21,42 @@ public class MangaService
     public Task<Manga?> GetByIdAsync(int id, CancellationToken ct = default)
         => _repository.GetByIdAsync(id, ct);
 
-    public async Task<Manga> AddAsync(string title, MangaSource source, string sourceUrl, CancellationToken ct = default)
+    public async Task<Manga> AddAsync(
+        string title,
+        int sourceId,
+        string sourceUrl,
+        CancellationToken ct = default)
     {
-        var normalizedUrl = sourceUrl.Trim().TrimEnd('/');
+           var normalizedUrl = sourceUrl.Trim().TrimEnd('/');
 
-        if (await _repository.ExistsByUrlAsync(normalizedUrl, ct))
+           if (await _repository.ExistsByUrlAsync(normalizedUrl, ct))
+           {
+               throw new DuplicateMangaException(normalizedUrl);
+           }
+
+        var source = await _sourceRepository.GetByIdAsync(sourceId, ct);
+        if (source is null)
         {
-            throw new DuplicateMangaException(normalizedUrl);
+            throw new InvalidMangaException($"Source {sourceId} does not exist.");
         }
+
 
         var manga = new Manga
         {
             Title = title.Trim(),
-            Source = source,
+            SourceId = sourceId,
+            Source = source,          // ← вот эта строка
             SourceUrl = normalizedUrl,
             CreatedAt = DateTime.UtcNow,
             HasUnreadChapter = false
         };
 
         await _repository.AddAsync(manga, ct);
-        await _repository.SaveChangesAsync(ct);
+            await _repository.SaveChangesAsync(ct);
 
-        return manga;
+            return manga;
     }
+    
 
     public async Task<bool> MarkAsReadAsync(int id, CancellationToken ct = default)
     {

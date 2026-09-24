@@ -5,15 +5,15 @@ namespace MangaTracker.Infrastructure.Providers;
 
 public class MangaSourceProviderFactory : IMangaSourceProviderFactory
 {
-    private readonly IReadOnlyDictionary<MangaSource, IMangaSourceProvider> _providers;
+    private readonly IReadOnlyDictionary<SourceKind, IMangaSourceProvider> _providers;
 
     public MangaSourceProviderFactory(IEnumerable<IMangaSourceProvider> providers)
     {
-        _providers = providers.ToDictionary(p => p.Source);
+        _providers = providers.ToDictionary(p => p.Kind);
     }
 
-    public IMangaSourceProvider? GetProvider(MangaSource source)
+    public IMangaSourceProvider? GetProvider(SourceKind kind)
     {
-        return _providers.TryGetValue(source, out var provider) ? provider : null;
+        return _providers.TryGetValue(kind, out var provider) ? provider : null;
     }
 }
